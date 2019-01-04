@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>考研小助手</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- fonts -->
+    <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
+
+    <!-- Plugin CSS -->
+    <link href="/static/vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
+
+    <link href="/static/css/mystyle.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- 导航条 -->
+    <nav class="navbar navbar-expand-lg  navbar-shrink fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand js-scroll-trigger" href="..">考研小助手</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto" id="mytab">
+            <li class="nav-item active">
+              <a class="nav-link js-scroll-trigger" href="../#home">主页</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="../#search">查询</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="../#contact">联系</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!--问答结果-->
+    <section>
+     <div class="container py-3">
+      <div class="row">
+        <!--查询结果-->
+        <div class="col-md-6 offset-1">
+          <div class="row">
+            <div class="col-md-2 offset-5">
+                  <h2 class="section-heading" style="text-align: right">结果</h2>
+                  <hr class="dark my-3" >
+            </div>
+              <div class="col-md-4">
+                  <div id="score" style="margin-right:10px;margin-top:12px;"></div>
+              </div>
+          </div>
+          <div class="card mb-4">
+            <textarea  name="" id="answer" cols="30" rows="12" placeholder="查询结果..." readonly></textarea>
+          </div>
+        </div>
+
+        <!--模态框-->
+        <div class="modal fade" tabindex="-1" id="mymodal">
+              <div class="modal-dialog" id="mydialog">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h4 class="modal-title">提示</h4>
+                          <button class="close" data-dismiss="modal">
+                              <span aria-disabled="true">&times;</span>
+                          </button>
+                      </div>
+                      <div class="modal-body">
+                          <p>对答案不满意？您可以将您认为最适当的答案<a href="../#contact">反馈</a>给我们，帮助我们完善该系统！</p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+        <!-- 侧面 -->
+        <div class="col-md-4 offset-1 py-3">
+          <!--搜索-->
+          <div class="card my-5">
+            <h5 class="card-header">查询</h5>
+            <div class="card-body">
+              <div class="input-group">
+                <input type="text" id="question" class="form-control" placeholder="搜索...">
+                <span class="input-group-btn">
+                  <button id="submit" class="btn btn-primary" type="button">确认</button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- 相关 -->
+          <div class="card my-4">
+            <h5 class="card-header">相关</h5>
+            <div class="card-body">
+              <div class="row" id="extension"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+     </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; 考研小助手 2018</p>
+      </div>
+    </footer>
+
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/js/jquery.raty.min.js"></script>
+
+    <script>
+
+        $(document).ready(function(){
+			    var tmp;
+			    var grade;
+			    var schoolname = "";
+			    var intention = "";
+			    var index = -1;
+			    $.fn.raty.defaults.path = '/static/img';
+			    load();
+
+                //第一次进入查询结果页面
+                function load(){
+                    var ans='{{ answer|safe }}';
+                    var answer=JSON.parse(ans);
+                    if(answer["baidu"] && answer["baidu"] !== "很抱歉，这个我也母鸡啊！") {
+                        $("#answer").val(answer["baidu"]);
+                        bindScore();
+                    }
+                    else if(answer["baidu"] === "很抱歉，这个我也母鸡啊！")
+                        $("#answer").val(answer["baidu"]);
+                    else
+                        $("#answer").val("抱歉啦，这个我也不知道哇！");
+
+                    //相关
+                    var count = 0;
+                    for(var i in answer)
+                        count++;
+                    if(count > 4 && answer["baidu"]) {
+                        $.each(answer, function (name) {
+                            if (name !== "baidu" && name != "schoolname" && name != "intention" && name != "index")
+                                $("#extension").append('<a class="col-lg-6 mylink extens" href="">' + name + '</a>');
+                        });
+                        $(".extens").on("click", function () {
+                            $("#answer").attr('placeholder','加载中...');
+                            $("#answer").val("");
+                            $("#score").raty("destroy");
+                            $("#answer").val((tmp[$(this).text()]));
+                            bindScore();
+                        });
+                    }
+                }
+
+			    //点击评分
+			    function bindScore(){
+			        $('#score').raty({
+                        score: 0,
+                        scoreName: 'score',
+                        click: function(score){
+                            grade = score;
+                            var url="/pingfen/";
+                            $.ajax({
+						        type:"Post",
+						        url:url,
+						        data:{"grade":grade,"schoolname":schoolname,"intention":intention,"index":index,"answer":$("#answer").val(),csrfmiddlewaretoken: '{{ csrf_token }}'},
+						        dataType:"text",
+						        success:function(){
+						            $('#score').raty('readOnly',true);
+						            $('#mymodal').modal('show');
+						        }
+                            });
+
+                        }
+                    });
+                }
+
+                //点击查询确认按钮触发事件
+                $("#submit").on("click",function(){
+                    $("#answer").val("");
+                    $("#answer").attr('placeholder','加载中...');
+                    $("#score").raty("destroy");
+                    $("#extension").text("");
+					var question = $("#question").val();
+					var url="/website/submit/";
+					$.ajax({
+						type:"Post",
+						url:url,
+						data:{"Question":question,csrfmiddlewaretoken: '{{ csrf_token }}'},
+						dataType:"json",
+						success:function(result){
+						    tmp = result;
+						    schoolname = result["schoolname"];
+						    intention = result["intention"];
+						    index = result["index"];
+						    if(result["baidu"] && result["baidu"] !== "很抱歉，这个我也母鸡啊！") {
+                                $("#answer").val(result["baidu"]);
+                                bindScore();
+                            }
+						    else if(result["baidu"] === "很抱歉，这个我也母鸡啊！")
+						        $("#answer").val(result["baidu"]);
+						    else
+						        $("#answer").val("抱歉啦，这个我也不知道哇！");
+
+                            //相关
+						    var count = 0;
+						    for(var i in result)
+						        count++;
+						    if(count > 4 && result["baidu"]) {
+                                $.each(result, function (name) {
+                                    if (name !== "baidu" && name != "schoolname" && name != "intention" && name != "index")
+                                        $("#extension").append('<a class="col-lg-6 mylink extens" href="">' + name + '</a>');
+                                });
+                                $(".extens").on("click", function () {
+                                    $("#answer").attr('placeholder','加载中...');
+                                    $("#answer").val("");
+                                    $("#score").raty("destroy");
+                                    $("#answer").val((tmp[$(this).text()]));
+                                    bindScore();
+                                });
+                            }
+
+						},
+						error:function(){
+							$("#answer").val("这个我也不知道啊！");
+						}
+					});
+			    });
+			});
+
+        	//问答功能回车触发提交按钮的点击事件
+			$("#question").keyup(function(event){
+			    if(event.keyCode ==13){
+			        $("#submit").trigger("click");
+			    }
+			});
+
+    </script>
+  </body>
+
+
+</html>
